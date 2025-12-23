@@ -1314,10 +1314,438 @@
   buildWishOptions();
   softReset("اكتب البيانات ثم اضغط “عرض التحليل العميق”.");
 </script>
+<!-- ================== FREE OFFLINE "AI" CHAT (Responsive + RTL) ================== -->
+<style>
+  :root{
+    --ai-z: 999999;
+    --ai-bg: rgba(10,12,16,.92);
+    --ai-surface: rgba(255,255,255,.06);
+    --ai-border: rgba(255,255,255,.12);
+    --ai-text: rgba(255,255,255,.92);
+    --ai-muted: rgba(255,255,255,.70);
+    --ai-green: #22c55e;
+    --ai-greenText: #06130a;
+    --ai-radius: 18px;
+  }
 
+  .ai-fab{
+    position: fixed;
+    left: 16px;
+    bottom: 16px;
+    z-index: var(--ai-z);
+  }
+  .ai-open{
+    border: 1px solid var(--ai-border);
+    background: rgba(34,197,94,.16);
+    backdrop-filter: blur(10px);
+    color: var(--ai-text);
+    border-radius: 999px;
+    padding: 12px 14px;
+    font-weight: 900;
+    cursor: pointer;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+  }
+  .ai-pill{
+    background: rgba(34,197,94,.25);
+    border: 1px solid rgba(34,197,94,.35);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .ai-panel{
+    position: fixed;
+    left: 16px;
+    bottom: 76px;
+    z-index: var(--ai-z);
+    width: min(540px, calc(100vw - 32px));
+    height: min(680px, calc(100vh - 120px));
+    background: var(--ai-bg);
+    border: 1px solid var(--ai-border);
+    border-radius: var(--ai-radius);
+    box-shadow: 0 18px 60px rgba(0,0,0,.55);
+    backdrop-filter: blur(14px);
+    overflow: hidden;
+    display: none;
+    direction: rtl;
+  }
+
+  .ai-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding: 12px;
+    border-bottom: 1px solid var(--ai-border);
+    background: rgba(255,255,255,.03);
+  }
+  .ai-title{
+    min-width: 0;
+    display:flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .ai-title strong{
+    color: var(--ai-text);
+    font-weight: 1000;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ai-title span{
+    color: var(--ai-muted);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ai-close{
+    border: 1px solid var(--ai-border);
+    background: rgba(255,255,255,.06);
+    color: var(--ai-text);
+    border-radius: 12px;
+    padding: 10px 12px;
+    cursor: pointer;
+    font-weight: 1000;
+  }
+
+  .ai-body{
+    height: calc(100% - 56px - 176px);
+    padding: 12px;
+    overflow: auto;
+    scroll-behavior: smooth;
+  }
+
+  .ai-msg{ display:flex; margin: 10px 0; }
+  .ai-msg.user{ justify-content:flex-start; }
+  .ai-msg.bot{ justify-content:flex-end; }
+
+  .ai-bubble{
+    max-width: 92%;
+    padding: 10px 12px;
+    border-radius: 16px;
+    line-height: 1.7;
+    font-size: 14px;
+    font-weight: 800;
+    border: 1px solid var(--ai-border);
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: var(--ai-surface);
+    color: var(--ai-text);
+  }
+  .ai-msg.bot .ai-bubble{
+    background: rgba(34,197,94,.18);
+    border-color: rgba(34,197,94,.26);
+  }
+
+  .ai-foot{
+    height: 176px;
+    padding: 12px;
+    border-top: 1px solid var(--ai-border);
+    background: rgba(0,0,0,.28);
+    display:flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .ai-label{
+    font-size: 12px;
+    font-weight: 1000;
+    color: rgba(255,255,255,.78);
+  }
+  .ai-compose{
+    flex: 1;
+    display:flex;
+    gap: 10px;
+    align-items: stretch;
+  }
+  .ai-input{
+    flex:1;
+    width: 100%;
+    min-height: 112px;
+    max-height: 240px;
+    resize: none;
+    border: 1px solid var(--ai-border);
+    background: rgba(255,255,255,.06);
+    color: var(--ai-text);
+    border-radius: 14px;
+    padding: 12px;
+    outline: none;
+    font-weight: 800;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .ai-send{
+    width: 130px;
+    border: 0;
+    background: var(--ai-green);
+    color: var(--ai-greenText);
+    border-radius: 14px;
+    padding: 12px 14px;
+    font-weight: 1000;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .ai-send:disabled{ opacity:.55; cursor:not-allowed; }
+
+  .ai-note{
+    font-size: 12px;
+    color: rgba(255,255,255,.62);
+    line-height: 1.5;
+  }
+
+  @media (max-width: 560px){
+    .ai-panel{
+      left: 10px;
+      bottom: 70px;
+      width: calc(100vw - 20px);
+      height: calc(100vh - 110px);
+      border-radius: 16px;
+    }
+    .ai-body{ height: calc(100% - 56px - 210px); }
+    .ai-foot{
+      height: 210px;
+      padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    }
+    .ai-compose{ flex-direction: column; }
+    .ai-send{ width: 100%; min-height: 48px; }
+    .ai-input{ min-height: 140px; }
+  }
+</style>
+
+<div class="ai-fab">
+  <button class="ai-open" id="aiOpenBtn" type="button">
+    💬 <span>مساعد القبول</span>
+    <span class="ai-pill" id="aiStatus">مجاني</span>
+  </button>
+</div>
+
+<section class="ai-panel" id="aiPanel" aria-label="مساعد القبول العسكري">
+  <header class="ai-head">
+    <div class="ai-title">
+      <strong>مساعد القبول العسكري (توعوي)</strong>
+      <span>إجابات إرشادية + خطة تحسين مختصرة</span>
+    </div>
+    <button class="ai-close" id="aiCloseBtn" type="button">إغلاق</button>
+  </header>
+
+  <div class="ai-body" id="aiBody">
+    <div class="ai-msg bot">
+      <div class="ai-bubble">
+هلا 👋
+اكتب سؤالك، أو اكتب بياناتك بهذا الشكل:
+"معدل 86، قدرات 72، تحصيلي 68، STEP 55، سنة التخرج 2022، عندي دورات …"
+وأعطيك نقاط قوة/ضعف + خطوات تحسين.
+      </div>
+    </div>
+  </div>
+
+  <footer class="ai-foot">
+    <div class="ai-label">اكتب سؤالك هنا (Enter = إرسال، Shift+Enter سطر جديد)</div>
+    <div class="ai-compose">
+      <textarea class="ai-input" id="aiInput" placeholder="مثال: لي سنين أقدم وما يجيني قبول… وش أركز عليه؟"></textarea>
+      <button class="ai-send" id="aiSendBtn" type="button">إرسال</button>
+    </div>
+    <div class="ai-note">
+تنبيه: هذا مساعد توعوي غير تابع لأي جهة رسمية. المرجع النهائي هو الإعلان الرسمي وشروطه.
+    </div>
+  </footer>
+</section>
+
+<script>
+/* ================== FREE OFFLINE "AI" ENGINE ================== */
+
+// عناصر الواجهة
+const ui = {
+  openBtn: document.getElementById("aiOpenBtn"),
+  closeBtn: document.getElementById("aiCloseBtn"),
+  panel: document.getElementById("aiPanel"),
+  body: document.getElementById("aiBody"),
+  input: document.getElementById("aiInput"),
+  sendBtn: document.getElementById("aiSendBtn"),
+  status: document.getElementById("aiStatus"),
+};
+
+function esc(s){
+  return String(s||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+function scrollBottom(){ ui.body.scrollTop = ui.body.scrollHeight; }
+
+function addMsg(role, text){
+  const wrap = document.createElement("div");
+  wrap.className = "ai-msg " + (role === "user" ? "user" : "bot");
+  const bubble = document.createElement("div");
+  bubble.className = "ai-bubble";
+  bubble.innerHTML = esc(text);
+  wrap.appendChild(bubble);
+  ui.body.appendChild(wrap);
+  scrollBottom();
+}
+
+// فتح/إغلاق
+ui.openBtn.onclick = ()=>{ ui.panel.style.display="block"; setTimeout(()=>ui.input.focus(), 60); scrollBottom(); };
+ui.closeBtn.onclick = ()=>{ ui.panel.style.display="none"; };
+
+// قاعدة معرفة مختصرة (وسعها لاحقًا)
+const KB = [
+  {k:["قدرات","قياس","اختبار القدرات"], a:`رفع القدرات:
+- اختبر تجريبي وحدد نقاط ضعفك (كمي/لفظي).
+- 60% كمي: نسبة/معادلات/جداول + وقت.
+- 40% لفظي: تناظر/إكمال/استيعاب.
+- خطتك 14 يوم: يوم كمي + يوم لفظي بالتناوب + محاكاة نهاية الأسبوع.`},
+
+  {k:["تحصيلي"], a:`رفع التحصيلي:
+- ركّز على الأسئلة المتكررة + خرائط ذهنية.
+- وزّع مذاكرتك (فيزياء/كيمياء/أحياء/رياضيات) بدل يوم واحد لكل مادة.
+- أسبوعيًا: نموذجين كاملين + مراجعة أخطائك.`},
+
+  {k:["step","ستيب","ايلتس","لغة","انجليزي"], a:`اللغة (STEP/IELTS):
+- يوميًا 20 دقيقة قراءة + 20 دقيقة مفردات + 20 دقيقة استماع.
+- ابدأ بنموذج تحديد مستوى ثم عالج نقاط ضعفك (grammar/reading).
+- أهم شيء: نماذج محاكاة بوقت.`},
+
+  {k:["دورات","دورة","شهادات"], a:`الدورات:
+- خذ دورات مرتبطة: إسعافات أولية، لياقة، أمن وسلامة، حاسب.
+- ركّز على الجودة مو الكمية، واحتفظ بملفات PDF/شهادات واضحة.`},
+
+  {k:["طول","وزن","bmi","كتلة"], a:`الطول/الوزن:
+- غالبًا القبول يتأثر بمطابقة المعايير الطبية.
+- هدفك: وزن صحي + لياقة (ركض/ضغط/بطن).
+- إذا عطيتني طولك ووزنك أحسب لك BMI وخطة بسيطة.`},
+
+  {k:["لي سنين","ما انقبلت","رفض","استبعاد"], a:`إذا لك سنين تقدم وما ينقبل:
+- راجع بياناتك: العمر/المعدل/الطول-الوزن/الاختبارات/المدينة.
+- جهّز بدائل: قطاعات مختلفة + وظائف قريبة لتخصصك.
+- اشتغل على عنصرين فقط الآن (مثلاً قدرات + لياقة) لمدة 30 يوم.`},
+
+  {k:["متى","تقديم","موعد","يفتح"], a:`المواعيد تختلف حسب الإعلان الرسمي.
+اكتب اسم الجهة/القطاع اللي تقصده وأنا أعطيك طريقة متابعة صحيحة + كلمات بحث جاهزة.`},
+];
+
+// استخراج أرقام بسيطة من كلام المستخدم
+function parseNums(text){
+  const t = text.replaceAll("٪","").replaceAll("%","");
+  const nums = [...t.matchAll(/(\d{2,3})/g)].map(m=>parseInt(m[1],10)).filter(n=>!isNaN(n));
+  return nums;
+}
+function pickScoreHint(text){
+  const low = [];
+  const high = [];
+  const nums = parseNums(text);
+  nums.forEach(n=>{
+    if(n < 60) low.push(n);
+    if(n >= 80) high.push(n);
+  });
+  return {nums, low, high};
+}
+
+function bestMatchAnswer(q){
+  const s = q.toLowerCase();
+  for(const item of KB){
+    if(item.k.some(kw => s.includes(kw.toLowerCase()))){
+      return item.a;
+    }
+  }
+  return null;
+}
+
+function buildPlanFromNumbers(q){
+  const {nums, low, high} = pickScoreHint(q);
+  if(!nums.length) return null;
+
+  // محاولة فهم سياق (معدل/قدرات/تحصيلي/STEP) بشكل بسيط
+  const hasQ = q.includes("قدرات");
+  const hasT = q.includes("تحصيلي");
+  const hasS = (q.toLowerCase().includes("step") || q.includes("ستيب"));
+  const hasM = q.includes("معدل");
+
+  let msg = `تمام—قرأت أرقام عندك: ${nums.join("، ")}.\n`;
+
+  if(low.length){
+    msg += `\nنقاط تحتاج تقوية (واضح عندك أقل من 60): ${low.join("، ")}.\n- ركّز عليها أول 3 أسابيع.\n`;
+  }
+  if(high.length){
+    msg += `\nنقاط ممتازة (80+): ${high.join("، ")}.\n- حافظ عليها ولا تضيع وقتك فيها كثير.\n`;
+  }
+
+  msg += `\nخطة 14 يوم سريعة:\n`;
+  msg += `- يوم 1: تحديد ضعفك (اختبار تجريبي)\n`;
+  msg += `- أيام 2-6: تدريب مركز + مراجعة الأخطاء\n`;
+  msg += `- يوم 7: محاكاة كاملة بوقت\n`;
+  msg += `- أيام 8-13: تكرار نفس الدورة مع رفع الصعوبة\n`;
+  msg += `- يوم 14: محاكاة + تقرير أخطاء\n`;
+
+  if(hasQ) msg += `\nملاحظة للقدرات: خلّ 60% من وقتك للكمي.\n`;
+  if(hasT) msg += `ملاحظة للتحصيلي: لا تذاكر مادة وحدة يوم كامل—قسّم.\n`;
+  if(hasS) msg += `ملاحظة للـ STEP: يوميًا قراءة+مفردات+نموذج قصير.\n`;
+  if(hasM) msg += `ملاحظة للمعدل: المعدل ثابت غالبًا، فخل شغلك الأكبر على الاختبارات واللياقة.\n`;
+
+  return msg;
+}
+
+function webSearchLinks(q){
+  // “بحث ويب” بدون API: روابط بحث جاهزة
+  const base = "https://www.google.com/search?q=" + encodeURIComponent(q + " شروط القبول الإعلان الرسمي");
+  return `إذا تبغى المصدر الرسمي: افتح هذا البحث 👇\n${base}`;
+}
+
+// منطق الرد
+function respond(q){
+  // 1) رد من قاعدة المعرفة
+  const kb = bestMatchAnswer(q);
+  // 2) أو خطة مبنية على أرقام
+  const plan = buildPlanFromNumbers(q);
+
+  if(plan) return plan + "\n\n" + webSearchLinks(q);
+  if(kb) return kb + "\n\n" + webSearchLinks(q);
+
+  // رد عام ذكي
+  return `عشان أعطيك جواب دقيق، اكتبها كذا:\n"معدل …، قدرات …، تحصيلي …، STEP …، سنة التخرج …، المدينة …"\n\nوبشكل عام: ركّز الآن على (اختبارات + لياقة + ترتيب ملفاتك) قبل فتح أي تقديم.\n\n` + webSearchLinks(q);
+}
+
+// إرسال
+function send(){
+  const q = (ui.input.value || "").trim();
+  if(!q) return;
+  addMsg("user", q);
+  ui.input.value = "";
+  ui.input.focus();
+
+  ui.status.textContent = "يفكر…";
+  ui.sendBtn.disabled = true;
+
+  // تأخير بسيط يعطي إحساس طبيعي
+  setTimeout(()=>{
+    const ans = respond(q);
+    addMsg("assistant", ans);
+    ui.status.textContent = "مجاني";
+    ui.sendBtn.disabled = false;
+  }, 250);
+}
+
+ui.sendBtn.onclick = send;
+ui.input.addEventListener("keydown", (e)=>{
+  if(e.key === "Enter" && !e.shiftKey){
+    e.preventDefault();
+    send();
+  }
+});
+</script>
+<!-- ================== END FREE OFFLINE "AI" CHAT ================== -->
 </body>
 
 </html>
+
 
 
 
