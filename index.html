@@ -1314,10 +1314,52 @@
   buildWishOptions();
   softReset("اكتب البيانات ثم اضغط “عرض التحليل العميق”.");
 </script>
-<a href="about.html">من نحن</a>
-</body>
 
+</body>
+<!-- Top Bar -->
+<div class="topbar">
+  <a class="topbar__brand" href="./index.html">مؤشر القبول</a>
+  <nav class="topbar__nav">
+    <a class="topbar__link" href="./about.html">من نحن</a>
+  </nav>
+</div>
+
+<style>
+  .topbar{
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    padding:10px 14px;
+    background: rgba(10,12,16,.92);
+    border-bottom:1px solid rgba(255,255,255,.10);
+    backdrop-filter: blur(10px);
+    direction: rtl;
+  }
+  .topbar__brand{
+    color: rgba(255,255,255,.95);
+    text-decoration:none;
+    font-weight: 900;
+    font-size: 14px;
+  }
+  .topbar__nav{display:flex; gap:10px; align-items:center;}
+  .topbar__link{
+    color: rgba(255,255,255,.92);
+    text-decoration:none;
+    font-weight: 900;
+    font-size: 13px;
+    padding:8px 12px;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius: 12px;
+    background: rgba(255,255,255,.06);
+  }
+  .topbar__link:hover{ background: rgba(255,255,255,.10); }
+</style>
 </html>
+
 
 
 
