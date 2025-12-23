@@ -1314,117 +1314,363 @@
   buildWishOptions();
   softReset("اكتب البيانات ثم اضغط “عرض التحليل العميق”.");
 </script>
-<!-- ===== AI Chat Widget ===== -->
+<!-- =========================
+AI Chat Widget (Responsive) - Paste before </body>
+========================= -->
 <style>
-  .ai-fab{position:fixed;bottom:18px;left:18px;z-index:9999}
-  .ai-btn{border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.30);backdrop-filter:blur(10px);
-    color:#eef2ff;border-radius:999px;padding:12px 14px;font-weight:900;cursor:pointer;min-height:46px}
-  .ai-panel{position:fixed;bottom:78px;left:18px;width:min(420px,calc(100vw - 36px));height:540px;z-index:9999;
-    border:1px solid rgba(255,255,255,.14);border-radius:18px;background:rgba(0,0,0,.28);backdrop-filter:blur(12px);
-    box-shadow:0 18px 60px rgba(0,0,0,.46);overflow:hidden;display:none}
-  .ai-head{padding:12px 12px;border-bottom:1px solid rgba(255,255,255,.12);display:flex;gap:10px;align-items:center;justify-content:space-between}
-  .ai-title{font-weight:1000;color:#eef2ff}
-  .ai-close{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:12px;color:#eef2ff;padding:8px 10px;cursor:pointer}
-  .ai-body{height:calc(100% - 116px);padding:12px;overflow:auto}
-  .ai-msg{margin:10px 0;display:flex}
-  .ai-msg.user{justify-content:flex-start}
-  .ai-msg.bot{justify-content:flex-end}
-  .ai-bubble{max-width:88%;padding:10px 12px;border-radius:16px;line-height:1.7;font-weight:850;font-size:13px;white-space:pre-wrap}
-  .ai-msg.user .ai-bubble{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#eef2ff}
-  .ai-msg.bot .ai-bubble{background:rgba(125,211,252,.14);border:1px solid rgba(125,211,252,.22);color:#eef2ff}
-  .ai-foot{padding:10px 12px;border-top:1px solid rgba(255,255,255,.12);display:flex;gap:8px}
-  .ai-input{flex:1;min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.18);color:#eef2ff;padding:10px 12px;font-weight:900;outline:none}
-  .ai-send{min-height:46px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(34,197,94,.14);color:#eef2ff;font-weight:1000;cursor:pointer;padding:0 14px}
-  .ai-src{margin-top:8px;font-size:12px;opacity:.9}
-  .ai-src a{color:#7dd3fc;text-decoration:underline}
+:root{
+  --ai-bg: rgba(18,18,22,.90);
+  --ai-br: rgba(255,255,255,.12);
+  --ai-tx: rgba(255,255,255,.92);
+  --ai-tx2: rgba(255,255,255,.70);
+  --ai-ac: #22c55e;
+  --ai-shadow: 0 18px 60px rgba(0,0,0,.45);
+}
+
+/* زر فتح الشات */
+.ai-fab{
+  position:fixed;
+  inset:auto 16px 16px auto; /* bottom-right */
+  z-index:99999;
+}
+html[dir="rtl"] .ai-fab{
+  inset:auto auto 16px 16px; /* bottom-left */
+}
+.ai-btn{
+  border:1px solid var(--ai-br);
+  background:rgba(0,0,0,.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color:var(--ai-tx);
+  border-radius:999px;
+  padding:12px 14px;
+  font-weight:900;
+  cursor:pointer;
+  min-height:46px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  box-shadow: var(--ai-shadow);
+  user-select:none;
+}
+
+/* اللوحة */
+.ai-panel{
+  position:fixed;
+  z-index:99998;
+  inset:auto 16px 72px auto; /* فوق الزر */
+  width:min(440px, calc(100vw - 32px));
+  height:min(600px, calc(100vh - 140px));
+  background:var(--ai-bg);
+  border:1px solid var(--ai-br);
+  border-radius:18px;
+  box-shadow: var(--ai-shadow);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  display:none;
+  overflow:hidden;
+}
+html[dir="rtl"] .ai-panel{
+  inset:auto auto 72px 16px;
+}
+
+.ai-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 12px;
+  border-bottom:1px solid var(--ai-br);
+}
+.ai-title{
+  font-weight:1000;
+  color:var(--ai-tx);
+  font-size:14px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.ai-badge{
+  font-size:11px;
+  font-weight:900;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid rgba(34,197,94,.35);
+  background:rgba(34,197,94,.12);
+  color:var(--ai-tx);
+}
+.ai-close{
+  border:1px solid var(--ai-br);
+  background:rgba(255,255,255,.06);
+  color:var(--ai-tx);
+  border-radius:12px;
+  padding:8px 10px;
+  cursor:pointer;
+  font-weight:1000;
+}
+
+/* جسم المحادثة */
+.ai-body{
+  height:calc(100% - 122px);
+  overflow:auto;
+  padding:12px;
+  scroll-behavior:smooth;
+}
+.ai-msg{ margin:10px 0; display:flex; }
+.ai-msg.user{ justify-content:flex-start; }
+.ai-msg.bot{ justify-content:flex-end; }
+
+.ai-bubble{
+  max-width:88%;
+  padding:10px 12px;
+  border-radius:16px;
+  line-height:1.7;
+  font-weight:800;
+  font-size:13px;
+  white-space:pre-wrap;
+  word-break:break-word;
+  border:1px solid rgba(255,255,255,.10);
+}
+.ai-msg.user .ai-bubble{
+  background:rgba(255,255,255,.08);
+  color:var(--ai-tx);
+}
+.ai-msg.bot .ai-bubble{
+  background:rgba(34,197,94,.14);
+  border-color:rgba(34,197,94,.28);
+  color:var(--ai-tx);
+}
+
+.ai-meta{
+  margin-top:6px;
+  font-size:11px;
+  color:var(--ai-tx2);
+  font-weight:700;
+}
+
+/* مدخل الرسالة */
+.ai-foot{
+  display:flex;
+  gap:10px;
+  padding:12px;
+  border-top:1px solid var(--ai-br);
+  align-items:flex-end;
+}
+.ai-input{
+  flex:1;
+  resize:none;
+  border:1px solid var(--ai-br);
+  background:rgba(255,255,255,.06);
+  color:var(--ai-tx);
+  border-radius:14px;
+  padding:10px 12px;
+  min-height:44px;
+  max-height:140px;
+  outline:none;
+  font-weight:800;
+}
+.ai-send{
+  border:0;
+  background:var(--ai-ac);
+  color:#07150b;
+  border-radius:14px;
+  padding:10px 14px;
+  font-weight:1000;
+  cursor:pointer;
+  min-width:86px;
+}
+.ai-send:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+.ai-hint{
+  color:var(--ai-tx2);
+  font-size:12px;
+  padding:0 12px 12px;
+}
+
+/* جوال: يصير شبه فل سكرين */
+@media (max-width: 520px){
+  .ai-panel{
+    inset:12px 12px 12px 12px;
+    width:auto; height:auto;
+    border-radius:18px;
+  }
+  html[dir="rtl"] .ai-panel{ inset:12px 12px 12px 12px; }
+  .ai-fab{ inset:auto 12px 12px auto; }
+  html[dir="rtl"] .ai-fab{ inset:auto auto 12px 12px; }
+}
+
+/* Safe area */
+@supports(padding: max(0px)){
+  .ai-panel{ margin-bottom: env(safe-area-inset-bottom); }
+  .ai-fab{ margin-bottom: env(safe-area-inset-bottom); }
+}
 </style>
 
-<div class="ai-fab">
-  <button class="ai-btn" id="aiOpenBtn">💬 مساعد القبول</button>
+<div class="ai-panel" id="aiPanel" aria-hidden="true">
+  <div class="ai-head">
+    <div class="ai-title">
+      مساعد القبول العسكري
+      <span class="ai-badge">توعوي</span>
+    </div>
+    <button class="ai-close" id="aiClose" type="button">إغلاق</button>
+  </div>
+
+  <div class="ai-body" id="aiBody"></div>
+
+  <div class="ai-hint">
+    تنبيه: مساعد إرشادي غير تابع لأي جهة رسمية — يعتمد على معلومات عامة وقد تختلف الشروط حسب الإعلان الرسمي.
+  </div>
+
+  <div class="ai-foot">
+    <textarea class="ai-input" id="aiInput" placeholder="اكتب سؤالك… مثال: كيف أرفع القدرات؟ وش أفضل دورات تقوّي ملفي؟" rows="1"></textarea>
+    <button class="ai-send" id="aiSend" type="button">إرسال</button>
+  </div>
 </div>
 
-<div class="ai-panel" id="aiPanel" dir="rtl" lang="ar">
-  <div class="ai-head">
-    <div class="ai-title">مساعد القبول العسكري (توعوي)</div>
-    <button class="ai-close" id="aiCloseBtn">إغلاق</button>
-  </div>
-  <div class="ai-body" id="aiBody">
-    <div class="ai-msg user"><div class="ai-bubble">اكتب سؤالك هنا… مثال: كيف أرفع القدرات؟ أو وش أفضل رغبات لو معدلي 78؟</div></div>
-  </div>
-  <div class="ai-foot">
-    <input class="ai-input" id="aiInput" placeholder="اكتب سؤالك..." />
-    <button class="ai-send" id="aiSendBtn">إرسال</button>
-  </div>
+<div class="ai-fab">
+  <button class="ai-btn" id="aiOpen" type="button">💬 مساعد القبول</button>
 </div>
 
 <script>
+(() => {
+  const panel = document.getElementById("aiPanel");
+  const openBtn = document.getElementById("aiOpen");
+  const closeBtn = document.getElementById("aiClose");
+  const body = document.getElementById("aiBody");
+  const input = document.getElementById("aiInput");
+  const sendBtn = document.getElementById("aiSend");
+
   const ai = {
-    panel: document.getElementById("aiPanel"),
-    body: document.getElementById("aiBody"),
-    input: document.getElementById("aiInput"),
-    openBtn: document.getElementById("aiOpenBtn"),
-    closeBtn: document.getElementById("aiCloseBtn"),
-    sendBtn: document.getElementById("aiSendBtn"),
-    busy:false,
-    session: [] // نحفظ آخر الرسائل (سياق بسيط)
+    busy: false,
+    session: [] // {role:"user"|"assistant", content:"..."}
   };
 
-  function aiAdd(role, text, sources){
+  // Auto size textarea
+  const autosize = () => {
+    input.style.height = "auto";
+    input.style.height = Math.min(input.scrollHeight, 140) + "px";
+  };
+
+  const scrollDown = () => {
+    body.scrollTop = body.scrollHeight;
+  };
+
+  const addMsg = (who, text) => {
     const wrap = document.createElement("div");
-    wrap.className = "ai-msg " + (role === "user" ? "user" : "bot");
-    const bub = document.createElement("div");
-    bub.className = "ai-bubble";
-    bub.textContent = text || "";
-    if (sources && sources.length){
-      const s = document.createElement("div");
-      s.className = "ai-src";
-      s.innerHTML = "مصادر: " + sources.map((x,i)=>`<a href="${x.url}" target="_blank" rel="noopener">${x.title || ("مصدر " + (i+1))}</a>`).join(" • ");
-      bub.appendChild(document.createElement("br"));
-      bub.appendChild(s);
+    wrap.className = "ai-msg " + (who === "user" ? "user" : "bot");
+
+    const bubble = document.createElement("div");
+    bubble.className = "ai-bubble";
+    bubble.textContent = text;
+
+    wrap.appendChild(bubble);
+    body.appendChild(wrap);
+    scrollDown();
+  };
+
+  const setBusy = (v) => {
+    ai.busy = v;
+    sendBtn.disabled = v;
+    input.disabled = v;
+    openBtn.disabled = false;
+  };
+
+  const openPanel = () => {
+    panel.style.display = "block";
+    panel.setAttribute("aria-hidden", "false");
+    setTimeout(() => input.focus(), 50);
+  };
+
+  const closePanel = () => {
+    panel.style.display = "none";
+    panel.setAttribute("aria-hidden", "true");
+  };
+
+  openBtn.onclick = openPanel;
+  closeBtn.onclick = closePanel;
+
+  // أول رسالة ترحيبية مرة واحدة
+  const ensureWelcome = () => {
+    if (body.childElementCount === 0) {
+      addMsg("bot", "هلا! اسألني عن تحسين ملفك للقطاعات العسكرية (قدرات/تحصيلي/STEP/دورات/سنة تخرج/سجل… إلخ).");
+      addMsg("bot", "إذا عندك رقم/درجة، أعطني التفاصيل وبأطلع لك نقاط القوة والضعف وخطة تحسين مختصرة.");
     }
-    wrap.appendChild(bub);
-    ai.body.appendChild(wrap);
-    ai.body.scrollTop = ai.body.scrollHeight;
-  }
+  };
 
-  async function aiSend(){
-    const q = (ai.input.value || "").trim();
-    if(!q || ai.busy) return;
-    ai.busy = true;
-    aiAdd("user", q);
-    ai.input.value = "";
+  const askAI = async (q) => {
+    // endpoint حق Netlify Function
+    const url = "/.netlify/functions/ask";
 
-    try{
-      const res = await fetch("/.netlify/functions/ai", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({
-          message: q,
-          context: ai.session.slice(-10) // آخر 10 رسائل
-        })
-      });
-      const data = await res.json();
-      if(!res.ok) throw new Error(data?.error || "Request failed");
+    const payload = {
+      q,
+      session: ai.session.slice(-10) // حافظ على آخر 10 رسائل فقط
+    };
 
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || "Request failed");
+    return data?.text || "ما قدرت أرجع إجابة.";
+  };
+
+  const send = async () => {
+    const q = (input.value || "").trim();
+    if (!q || ai.busy) return;
+
+    ensureWelcome();
+    addMsg("user", q);
+    input.value = "";
+    autosize();
+
+    setBusy(true);
+    try {
+      const text = await askAI(q);
+
+      // خزّن الجلسة
       ai.session.push({role:"user", content:q});
-      ai.session.push({role:"assistant", content:data.text});
+      ai.session.push({role:"assistant", content:text});
 
-      aiAdd("assistant", data.text, data.sources || []);
-    }catch(e){
-      aiAdd("assistant", "صار خطأ في الاتصال بالمساعد. جرّب بعد دقيقة أو تأكد من إعدادات المفتاح في Netlify.");
-    }finally{
-      ai.busy = false;
+      addMsg("assistant", text);
+    } catch (e) {
+      addMsg("assistant", "صار خطأ في الاتصال بالمساعد. تأكد من إعدادات المفتاح في Netlify أو جرّب بعد دقيقة.");
+    } finally {
+      setBusy(false);
+      setTimeout(() => input.focus(), 0);
     }
-  }
+  };
 
-  ai.openBtn.onclick = ()=> ai.panel.style.display = "block";
-  ai.closeBtn.onclick = ()=> ai.panel.style.display = "none";
-  ai.sendBtn.onclick = aiSend;
-  ai.input.addEventListener("keydown", (e)=>{ if(e.key==="Enter") aiSend(); });
+  sendBtn.onclick = send;
+
+  input.addEventListener("input", autosize);
+
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  });
+
+  // افتح اللوحة ويظهر الترحيب عند أول فتح
+  openBtn.addEventListener("click", ensureWelcome);
+
+  // RTL تحسين بسيط (لو صفحتك RTL)
+  if (!document.documentElement.getAttribute("dir")) {
+    document.documentElement.setAttribute("dir","rtl");
+  }
+})();
 </script>
+<!-- ========================= End Widget ========================= -->
 </body>
 
 </html>
+
 
 
 
